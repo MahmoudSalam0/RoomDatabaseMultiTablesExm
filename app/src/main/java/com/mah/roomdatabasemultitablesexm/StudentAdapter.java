@@ -34,13 +34,12 @@ public class StudentAdapter extends RecyclerView.Adapter<StudentAdapter.StudentV
         holder.studentName.setText(current.getName());
         holder.studentBirthDate.setText(current.getBirthDate().toString());
 
-        // عرض الصورة
         byte[] imageBytes = current.getPhoto();
         if (imageBytes != null && imageBytes.length > 0) {
             Bitmap bitmap = Converter.byteAsBitMap(imageBytes);
             holder.studentImage.setImageBitmap(bitmap);
         } else {
-            holder.studentImage.setImageResource(R.drawable.ic_launcher_background); // صورة افتراضية
+            holder.studentImage.setImageResource(R.drawable.ic_launcher_background);
         }
     }
 

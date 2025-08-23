@@ -7,7 +7,10 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.Toast;
+import android.app.AlertDialog;
+import android.widget.EditText;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResult;
@@ -25,16 +28,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
-
     Button camera;
-    Button insert;
+    Button insert , insertSingle;
     private byte[] currentPhoto;
-
     RecyclerView recyclerCourses, recyclerStudents;
     CourseAdapter courseAdapter;
     StudentAdapter studentAdapter;
-
-
     ActivityResultLauncher<Intent> cameraActivityResultLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             new ActivityResultCallback<>() {
@@ -43,12 +42,10 @@ public class MainActivity extends AppCompatActivity {
                     Bundle extras = result.getData().getExtras();
                     Bitmap bitmap = (Bitmap) extras.get("data"); // الصورة المصغرة
 
-                    // نحول Bitmap -> byte[] باستخدام Converter
                     currentPhoto = Converter.bitAsByteArray(bitmap);
                 }
             }
     );
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,6 +62,82 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerCourses.setAdapter(courseAdapter);
         recyclerStudents.setAdapter(studentAdapter);
+
+        insertSingle = findViewById(R.id.insertSingle);
+
+        insertSingle.setOnClickListener(v -> {
+            String[] options = {"Add Student", "Add Course"};
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("what do u want?");
+            builder.setItems(options, (dialog, which) -> {
+                MyViewModel myViewModel = new ViewModelProvider(this).get(MyViewModel.class);
+
+                if (which == 0) {
+                    AlertDialog.Builder studentDialog = new AlertDialog.Builder(this);
+                    studentDialog.setTitle("student Information");
+
+                    EditText studentName = new EditText(this);
+                    studentName.setHint("student Name");
+
+                    EditText studentDept = new EditText(this);
+                    studentDept.setHint("major");
+
+                    LinearLayout layout = new LinearLayout(this);
+                    layout.setOrientation(LinearLayout.VERTICAL);
+                    layout.addView(studentName);
+                    layout.addView(studentDept);
+
+                    studentDialog.setView(layout);
+
+                    studentDialog.setPositiveButton("Add", (d, i) -> {
+                        if (studentName.getText().length() > 0 && studentDept.getText().length() > 0) {
+                            Student student = new Student(
+                                    studentName.getText().toString(),
+                                    currentPhoto != null ? currentPhoto : new byte[0],
+                                    new Date(),
+                                    studentDept.getText().toString(),
+                                    1
+                            );
+                            myViewModel.insertStudent(student);
+                            currentPhoto = null;
+                            Toast.makeText(this, " Student added", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    studentDialog.setNegativeButton("Cancel", null);
+                    studentDialog.show();
+
+                } else {
+                    AlertDialog.Builder courseDialog = new AlertDialog.Builder(this);
+                    courseDialog.setTitle("course details");
+
+                    EditText courseName = new EditText(this);
+                    courseName.setHint("Course Name");
+
+                    EditText courseHours = new EditText(this);
+                    courseHours.setHint("Hours?");
+
+                    LinearLayout layout = new LinearLayout(this);
+                    layout.setOrientation(LinearLayout.VERTICAL);
+                    layout.addView(courseName);
+                    layout.addView(courseHours);
+
+                    courseDialog.setView(layout);
+
+                    courseDialog.setPositiveButton("Add", (d, i) -> {
+                        if (courseName.getText().length() > 0 && courseHours.getText().length() > 0) {
+                            int hours = Integer.parseInt(courseHours.getText().toString());
+                            Course course = new Course(courseName.getText().toString(), hours);
+                            myViewModel.insertCourse(course);
+                            Toast.makeText(this, "Course adeed", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    courseDialog.setNegativeButton("Cancel", null);
+                    courseDialog.show();
+                }
+            });
+            builder.show();
+        });
+
 
 
         MyViewModel myViewModel = new ViewModelProvider(this).get(MyViewModel.class);
@@ -99,12 +172,12 @@ public class MainActivity extends AppCompatActivity {
                         1
                 );
                 myViewModel.insertStudent(student);
-                Toast.makeText(this, "تم حفظ الطالب بالصورة ✅", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Photo Saved", Toast.LENGTH_SHORT).show();
 
 
                 currentPhoto = null;
             } else {
-                Toast.makeText(this, "الرجاء التقاط صورة أولاً", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Please Take Photoً", Toast.LENGTH_SHORT).show();
             }
         });
 
